@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { translations } from '../../App';
 
 interface WorkspaceAssetsProps {
   layerImages: Record<string, string>;
@@ -8,27 +9,35 @@ interface WorkspaceAssetsProps {
   onReplaceClick: (key: string) => void;
   onDownloadClick: (key: string, data: string) => void;
   modifiedKeys: Set<string>;
+  lang: 'ar' | 'en';
 }
 
 export const WorkspaceAssets: React.FC<WorkspaceAssetsProps> = ({ 
-  layerImages, searchQuery, onSearchChange, onReplaceClick, onDownloadClick, modifiedKeys 
+  layerImages, searchQuery, onSearchChange, onReplaceClick, onDownloadClick, modifiedKeys, lang 
 }) => {
+  const t = translations[lang];
   const filteredKeys = Object.keys(layerImages)
     .filter(key => key.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => (parseInt(a.match(/\d+/)?.[0] || '0') - parseInt(b.match(/\d+/)?.[0] || '0')));
 
   return (
     <div className="bg-slate-950 rounded-[3rem] p-6 sm:p-10 border border-white/5 flex flex-col h-auto xl:h-[850px] shadow-3xl relative overflow-hidden">
-      <div className="mb-8 relative z-10">
-        <h3 className="text-white font-black text-2xl tracking-tighter uppercase mb-1">المحتويات المستخرجة</h3>
-        <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">Genius Assets Navigator</p>
+      <div className={`mb-8 relative z-10 ${lang === 'ar' ? 'text-right' : 'text-left'}`}>
+        <h3 className="text-white font-black text-2xl tracking-tighter uppercase mb-1">{t.assetsTitle}</h3>
+        <p className="text-slate-600 text-[10px] font-black uppercase tracking-[0.3em]">{t.assetsSub}</p>
       </div>
 
       <div className="relative mb-8 z-10">
-        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-700">
+        <div className={`absolute ${lang === 'ar' ? 'right-6' : 'left-6'} top-1/2 -translate-y-1/2 text-slate-700`}>
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
         </div>
-        <input type="text" placeholder="ابحث عن صورة معينة..." value={searchQuery} onChange={(e) => onSearchChange(e.target.value)} className="w-full bg-slate-900/40 border border-white/5 rounded-2xl py-5 pl-14 pr-6 text-sm text-slate-200 placeholder-slate-700 outline-none focus:border-sky-500/40 transition-all text-right font-black" />
+        <input 
+          type="text" 
+          placeholder={t.searchPlaceholder} 
+          value={searchQuery} 
+          onChange={(e) => onSearchChange(e.target.value)} 
+          className={`w-full bg-slate-900/40 border border-white/5 rounded-2xl py-5 ${lang === 'ar' ? 'pr-14 pl-6 text-right' : 'pl-14 pr-6 text-left'} text-sm text-slate-200 placeholder-slate-700 outline-none focus:border-sky-500/40 transition-all font-black`} 
+        />
       </div>
 
       <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar max-h-[650px] xl:max-h-none pb-10 relative z-10">
@@ -44,7 +53,7 @@ export const WorkspaceAssets: React.FC<WorkspaceAssetsProps> = ({
               </div>
               <div className="mt-4 text-center">
                 <span className="text-[10px] text-slate-500 font-black truncate block uppercase">{key}</span>
-                {modifiedKeys.has(key) && <span className="text-[8px] text-amber-500 font-black uppercase mt-1 inline-block bg-amber-500/10 px-2 py-0.5 rounded-full">Modified</span>}
+                {modifiedKeys.has(key) && <span className="text-[8px] text-amber-500 font-black uppercase mt-1 inline-block bg-amber-500/10 px-2 py-0.5 rounded-full">{t.modifiedTag}</span>}
               </div>
             </div>
           ))}

@@ -33,6 +33,7 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onUpdateStatus, o
             <tr className="bg-white/[0.03] text-slate-400 text-[8px] font-black uppercase tracking-widest border-b border-white/5">
               <th className="px-6 py-4">بيانات المستخدم (Gmail & ID)</th>
               <th className="px-6 py-4 text-center">رصيد الألماس 💎</th>
+              <th className="px-6 py-4 text-center">VIP يدوي</th>
               <th className="px-6 py-4 text-center">الحالة / التحكم</th>
               <th className="px-6 py-4 text-center">حذف</th>
             </tr>
@@ -61,6 +62,15 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ users, onUpdateStatus, o
                       className="w-20 bg-slate-900 border border-white/5 rounded-lg py-1 px-2 text-center text-xs font-black text-sky-400 outline-none focus:border-sky-500/50"
                     />
                   </div>
+                </td>
+                <td className="px-6 py-4 text-center">
+                  <button 
+                    onClick={() => onUpdateStatus(user.firestoreId, { manualVIP: !user.manualVIP })}
+                    className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${user.manualVIP ? 'bg-amber-500 text-white border-amber-400 shadow-glow-amber-sm' : 'bg-white/5 text-slate-600 border-white/10 hover:border-amber-500/30'}`}
+                    title={user.manualVIP ? 'Revoke VIP' : 'Grant VIP'}
+                  >
+                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"/></svg>
+                  </button>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-2">

@@ -51,27 +51,51 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
     return () => { unsubEconomy(); unsubSocial(); unsubBranding(); };
   }, []);
 
-  const updateExportCost = async (newVal: number) => {
-    if (newVal < 0) return;
-    setExportCost(newVal);
-    await setDoc(doc(db, "settings", "economy"), { exportCost: newVal }, { merge: true });
-  };
-
   const updateSocialLinks = async () => {
     await setDoc(doc(db, "settings", "social"), { whatsapp, tiktok }, { merge: true });
     alert("تم تحديث روابط التواصل بنجاح ✅");
   };
 
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // وظيفة تصغير حجم اللوجو لضمان التزامن الفوري
+  const resizeLogo = (base64: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 200;
+        const MAX_HEIGHT = 200;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/png', 0.8)); // ضغط الصورة
+      };
+      img.src = base64;
+    });
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1024 * 1024) {
-        alert("حجم اللوجو كبير جداً، يرجى استخدام صورة أقل من 1 ميجابايت.");
-        return;
-      }
       const reader = new FileReader();
-      reader.onload = (event) => {
-        setLogo(event.target?.result as string);
+      reader.onload = async (event) => {
+        const rawBase64 = event.target?.result as string;
+        const processedLogo = await resizeLogo(rawBase64);
+        setLogo(processedLogo);
       };
       reader.readAsDataURL(file);
     }
@@ -86,9 +110,9 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
         subTitle,
         logo: logo
       }, { merge: true });
-      alert("تم تحديث هوية الموقع والشعار بالكامل بنجاح ✅");
+      alert("تم تحديث هوية الموقع والشعار للجميع فوراً ✅");
     } catch (e) {
-      alert("فشل تحديث البيانات، يرجى المحاولة لاحقاً.");
+      alert("فشل تحديث البيانات، قد يكون حجم اللوجو كبيراً جداً.");
     } finally {
       setIsSavingBranding(false);
     }
@@ -134,7 +158,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
                 )}
               </div>
               <input type="file" ref={logoInputRef} onChange={handleLogoUpload} accept="image/*" className="hidden" />
-              <p className="text-[8px] text-slate-600 text-center leading-relaxed">اضغط لرفع اللوجو (PNG/JPG)<br/>سيتم استخدامه في كامل الموقع</p>
+              <p className="text-[8px] text-slate-600 text-center leading-relaxed">سيتم ضغط الصورة تلقائياً<br/>لتظهر لدى الجميع فوراً</p>
            </div>
 
            {/* الحقول النصية */}
@@ -151,13 +175,6 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
                  <input 
                    type="text" value={subTitle} onChange={(e) => setSubTitle(e.target.value)}
                    className="w-full bg-slate-950 border border-white/5 rounded-xl py-2.5 px-4 text-white text-xs text-right outline-none focus:border-sky-500/30 font-bold"
-                 />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                 <label className="text-[8px] text-slate-500 font-black uppercase text-right pr-2">نص واجهة الدخول</label>
-                 <textarea 
-                   value={mainTitle} onChange={(e) => setMainTitle(e.target.value)}
-                   className="w-full bg-slate-950 border border-white/5 rounded-xl py-2.5 px-4 text-white text-[11px] text-right outline-none focus:border-sky-500/30 h-16 resize-none font-medium"
                  />
               </div>
            </div>

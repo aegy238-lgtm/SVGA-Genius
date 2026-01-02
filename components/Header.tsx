@@ -24,6 +24,7 @@ export const Header: React.FC<HeaderProps> = ({
   const [showProfile, setShowProfile] = useState(false);
   const [copyStatus, setCopyStatus] = useState(false);
   const [branding, setBranding] = useState({ name: 'SVGA Genius', subTitle: 'Quantum Suite', logo: null as string | null });
+  const [social, setSocial] = useState({ whatsapp: '', tiktok: '' });
 
   const t = translations[lang];
 
@@ -52,7 +53,13 @@ export const Header: React.FC<HeaderProps> = ({
       }
     });
 
-    return () => { if (unsubUser) unsubUser(); unsubBranding(); };
+    const unsubSocial = onSnapshot(doc(db, "settings", "social"), (snap) => {
+      if (snap.exists()) {
+        setSocial({ whatsapp: snap.data().whatsapp || '', tiktok: snap.data().tiktok || '' });
+      }
+    });
+
+    return () => { if (unsubUser) unsubUser(); unsubBranding(); unsubSocial(); };
   }, []);
 
   const copyToClipboard = () => {
@@ -79,6 +86,20 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Action Controls */}
         <div className={`flex items-center gap-1.5 sm:gap-3 shrink-0 ${lang === 'en' ? 'flex-row-reverse' : ''}`}>
           
+          {/* Social Links */}
+          <div className="hidden md:flex items-center gap-2 mr-2 ml-2">
+            {social.whatsapp && (
+              <a href={`https://wa.me/${social.whatsapp}`} target="_blank" rel="noreferrer" className="w-8 h-8 flex items-center justify-center bg-green-500/10 hover:bg-green-500/20 text-green-500 rounded-lg border border-green-500/20 transition-all">
+                <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              </a>
+            )}
+            {social.tiktok && (
+              <a href={social.tiktok} target="_blank" rel="noreferrer" className="w-8 h-8 flex items-center justify-center bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 rounded-lg border border-sky-500/20 transition-all">
+                <svg className="w-4.5 h-4.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.17-2.86-.6-4.12-1.31a6.417 6.417 0 01-1.87-1.52v9.33c.02 1.44-.22 2.92-.85 4.21-.63 1.28-1.68 2.39-2.99 3.04-1.3.66-2.82.91-4.26.75-1.44-.17-2.85-.72-3.99-1.64-1.14-.92-1.95-2.23-2.31-3.63-.37-1.4-.24-2.92.35-4.22.59-1.31 1.64-2.43 2.96-3.11 1.32-.67 2.87-.9 4.31-.72 1.45.18 2.84.75 3.96 1.68V7.22c-.01-2.4-.01-4.8-.02-7.2zm-5.23 14.26c-1.24-.07-2.42.39-3.34 1.21-.92.82-1.45 2.05-1.45 3.3.01 1.25.55 2.46 1.48 3.27.93.81 2.13 1.24 3.38 1.15 1.25-.09 2.42-.66 3.19-1.65.77-.99 1.13-2.28 1.01-3.52-.12-1.24-.76-2.37-1.78-3.09-.92-.64-2.04-.93-3.09-.67z"/></svg>
+              </a>
+            )}
+          </div>
+
           {/* Language Toggle Button */}
           <button 
             onClick={onLangToggle}

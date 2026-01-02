@@ -5,6 +5,7 @@ import { SUPPORTED_OUTPUTS } from '../constants';
 import { WorkspacePlayer } from './workspace/WorkspacePlayer';
 import { WorkspaceAssets } from './workspace/WorkspaceAssets';
 import { WorkspaceExport } from './workspace/WorkspaceExport';
+import { translations } from '../App';
 
 declare var SVGA: any;
 declare var JSZip: any;
@@ -13,9 +14,10 @@ declare var gifshot: any;
 interface WorkspaceProps {
   metadata: FileMetadata;
   onCancel: () => void;
+  lang: 'ar' | 'en';
 }
 
-export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
+export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel, lang }) => {
   const playerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -31,6 +33,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [replacingAssetKey, setReplacingAssetKey] = useState<string | null>(null);
 
+  const t = translations[lang];
   const videoWidth = metadata.dimensions?.width || 500;
   const videoHeight = metadata.dimensions?.height || 500;
   const aspectRatio = videoWidth / videoHeight;
@@ -89,17 +92,16 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
     if (selectedFormat === 'GIF') {
       const gifshotObj = (window as any).gifshot;
       if (!gifshotObj) {
-        alert("خطأ: مكتبة معالجة GIF غير متوفرة حالياً. يرجى التحقق من اتصال الإنترنت وإعادة المحاولة.");
+        alert(lang === 'ar' ? "خطأ: مكتبة معالجة GIF غير متوفرة" : "Error: GIF library unavailable");
         setIsExporting(false);
         if (wasPlaying) svgaInstance.startAnimation();
         return;
       }
 
-      setExportPhase('جاري التقاط الفريمات لـ GIF...');
+      setExportPhase(lang === 'ar' ? 'جاري التقاط الفريمات...' : 'Capturing frames...');
       const frames = [];
       const canvas = document.createElement('canvas');
-      canvas.width = videoWidth;
-      canvas.height = videoHeight;
+      canvas.width = videoWidth; canvas.height = videoHeight;
       const ctx = canvas.getContext('2d');
       
       for (let i = 0; i < (metadata.frames || 1); i++) {
@@ -114,7 +116,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
         setProgress(Math.floor((i / (metadata.frames || 1)) * 50));
       }
 
-      setExportPhase('جاري إنشاء ملف GIF...');
+      setExportPhase(lang === 'ar' ? 'جاري إنشاء ملف GIF...' : 'Generating GIF...');
       gifshotObj.createGIF({
         images: frames,
         gifWidth: videoWidth,
@@ -128,14 +130,12 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
           link.href = obj.image;
           link.download = `${metadata.name}.gif`;
           link.click();
-        } else {
-          alert("حدث خطأ أثناء توليد ملف GIF.");
         }
         setIsExporting(false);
         if (wasPlaying) svgaInstance.startAnimation();
       });
     } else {
-      setExportPhase(`جاري تصدير ${selectedFormat} Sequence...`);
+      setExportPhase(lang === 'ar' ? `جاري تصدير ${selectedFormat}...` : `Exporting ${selectedFormat}...`);
       const zip = new JSZip();
       const canvas = document.createElement('canvas');
       canvas.width = videoWidth; canvas.height = videoHeight;
@@ -165,7 +165,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
   };
 
   const handleDownloadAllLayers = async () => {
-    setIsExporting(true); setExportPhase('تجميع الطبقات...'); setProgress(20);
+    setIsExporting(true); setExportPhase(lang === 'ar' ? 'تجميع الطبقات...' : 'Packing layers...'); setProgress(20);
     const zip = new JSZip();
     Object.entries(layerImages).forEach(([key, data]) => zip.file(`${key}.png`, (data as string).split(',')[1], { base64: true }));
     const blob = await zip.generateAsync({ type: "blob" });
@@ -177,7 +177,7 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
   };
 
   return (
-    <div className="flex flex-col gap-8 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-1000 font-arabic select-none">
+    <div className={`flex flex-col gap-8 pb-32 animate-in fade-in slide-in-from-bottom-8 duration-1000 ${lang === 'ar' ? 'font-arabic' : 'font-sans'} select-none`} dir={lang === 'ar' ? 'rtl' : 'ltr'}>
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => {
         const file = e.target.files?.[0];
         if (file && replacingAssetKey && svgaInstance) {
@@ -193,12 +193,12 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
         }
       }} />
 
-      <div className="flex flex-col lg:flex-row items-center justify-between p-6 sm:p-8 rounded-[3.5rem] border border-white/5 bg-slate-900/60 backdrop-blur-3xl shadow-2xl gap-6">
-        <div className="flex items-center gap-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-[2rem] flex items-center justify-center text-3xl shadow-glow-sky">✨</div>
-          <div className="text-right">
-            <h2 className="text-2xl font-black text-white">{metadata.name}</h2>
-            <div className="flex gap-2 mt-1">
+      <div className={`flex flex-col lg:flex-row items-center justify-between p-6 sm:p-8 rounded-[3.5rem] border border-white/5 bg-slate-900/60 backdrop-blur-3xl shadow-2xl gap-6 ${lang === 'en' ? 'lg:flex-row-reverse' : ''}`}>
+        <div className={`flex items-center gap-6 ${lang === 'en' ? 'flex-row-reverse' : ''}`}>
+          <div className="w-16 h-16 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-[2rem] flex items-center justify-center text-3xl shadow-glow-sky shrink-0">✨</div>
+          <div className={lang === 'ar' ? 'text-right' : 'text-left'}>
+            <h2 className="text-xl sm:text-2xl font-black text-white">{metadata.name}</h2>
+            <div className={`flex gap-2 mt-1 ${lang === 'en' ? 'flex-row-reverse' : ''}`}>
                <span className="px-3 py-1 bg-white/5 rounded-full text-[8px] font-black text-slate-400 uppercase border border-white/5">{metadata.frames} Frames</span>
                <span className="px-3 py-1 bg-white/5 rounded-full text-[8px] font-black text-slate-400 uppercase border border-white/5">{videoWidth}x{videoHeight}</span>
             </div>
@@ -206,21 +206,21 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
         </div>
         
         <div className="flex flex-col items-center gap-2">
-           <span className="px-5 py-1.5 bg-sky-500/10 rounded-xl text-[10px] font-black text-sky-400 uppercase tracking-widest border border-sky-500/20">منصة المصمم الذكية</span>
-           <span className="text-[8px] text-slate-500 uppercase font-bold tracking-[0.3em]">Drop any SVGA file to switch</span>
+           <span className="px-5 py-1.5 bg-sky-500/10 rounded-xl text-[10px] font-black text-sky-400 uppercase tracking-widest border border-sky-500/20">{t.workspaceTitle}</span>
+           <span className="text-[8px] text-slate-500 uppercase font-bold tracking-[0.3em]">{t.workspaceSub}</span>
         </div>
 
-        <button onClick={onCancel} className="px-8 py-4 bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-[2rem] border border-white/10 transition-all font-black text-[10px] tracking-widest uppercase">إغلاق</button>
+        <button onClick={onCancel} className="w-full lg:w-auto px-8 py-4 bg-white/5 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-[2rem] border border-white/10 transition-all font-black text-[10px] tracking-widest uppercase">{t.closeBtn}</button>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         <div className="xl:col-span-7 flex flex-col gap-8">
-          <WorkspacePlayer playerRef={playerRef} aspectRatio={aspectRatio} isPlaying={isPlaying} onPlayToggle={handlePlayToggle} currentFrame={currentFrame} totalFrames={metadata.frames || 0} onFrameChange={handleFrameChange} />
-          <WorkspaceExport formats={SUPPORTED_OUTPUTS} selectedFormat={selectedFormat} onFormatSelect={setSelectedFormat} onExport={handleExport} onFrameExport={handleExport} onAssetsExport={handleDownloadAllLayers} />
+          <WorkspacePlayer playerRef={playerRef} aspectRatio={aspectRatio} isPlaying={isPlaying} onPlayToggle={handlePlayToggle} currentFrame={currentFrame} totalFrames={metadata.frames || 0} onFrameChange={handleFrameChange} lang={lang} />
+          <WorkspaceExport formats={SUPPORTED_OUTPUTS} selectedFormat={selectedFormat} onFormatSelect={setSelectedFormat} onExport={handleExport} onFrameExport={handleExport} onAssetsExport={handleDownloadAllLayers} lang={lang} />
         </div>
 
         <div className="xl:col-span-5">
-          <WorkspaceAssets layerImages={layerImages} searchQuery={searchQuery} onSearchChange={setSearchQuery} onReplaceClick={(key) => { setReplacingAssetKey(key); fileInputRef.current?.click(); }} onDownloadClick={(k, d) => { const a = document.createElement('a'); a.href = d; a.download = `${k}.png`; a.click(); }} modifiedKeys={modifiedKeys} />
+          <WorkspaceAssets layerImages={layerImages} searchQuery={searchQuery} onSearchChange={setSearchQuery} onReplaceClick={(key) => { setReplacingAssetKey(key); fileInputRef.current?.click(); }} onDownloadClick={(k, d) => { const a = document.createElement('a'); a.href = d; a.download = `${k}.png`; a.click(); }} modifiedKeys={modifiedKeys} lang={lang} />
         </div>
       </div>
 
@@ -236,15 +236,10 @@ export const Workspace: React.FC<WorkspaceProps> = ({ metadata, onCancel }) => {
               </div>
             </div>
             <h3 className="text-2xl font-black text-white mb-2 uppercase tracking-tighter">{exportPhase}</h3>
-            <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">يرجى عدم إغلاق النافذة أثناء المعالجة</p>
+            <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest">{lang === 'ar' ? 'يرجى عدم إغلاق النافذة أثناء المعالجة' : 'Please do not close the window during processing'}</p>
           </div>
         </div>
       )}
-      
-      <style>{`
-        .shadow-glow-indigo-sm { box-shadow: 0 0 15px rgba(79, 70, 229, 0.4); }
-        .shadow-glow-sky { box-shadow: 0 0 30px rgba(14, 165, 233, 0.4); }
-      `}</style>
     </div>
   );
 };
