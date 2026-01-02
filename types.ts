@@ -26,6 +26,7 @@ export interface UserRecord {
   createdAt: any;
   lastLogin: any;
   diamonds: number;
+  manualVIP?: boolean; // خاصية التحكم اليدوي في الامتيازات
 }
 
 export interface SupportMessage {
